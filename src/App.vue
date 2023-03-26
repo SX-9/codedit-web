@@ -55,13 +55,13 @@ function getInput(msg) {
 }
 
 async function startServer() {
-  let server = await container.spawn('nodemon', ['index.js']);
+  let server = await container.spawn('node', ['index.js']);
 
   document.getElementById('term').innerHTML = 'Starting Dev Server...<br><br>';
   server.output.pipeTo(new WritableStream({
     write(data) {
       document.getElementById('term').innerHTML +=
-      data.replace(/\[(\d?;?\d*)m/g, data) + '<br>';
+      data.replace(/\[(?\d*?;?\d*)m/g, '') + '<br>';
     }
   }));
 }
@@ -112,7 +112,7 @@ async function exec() {
   display: grid;
   grid-gap: .01em;
   grid-template-columns: 50% 50%;
-  grid-template-rows: 1.5rem 1fr;
+  grid-template-rows: 4% 96%;
   grid-template-areas:
     'bar bar'
     'edit term';
@@ -122,9 +122,9 @@ async function exec() {
   margin: 0;
   padding: 0;
   font-family: 'Courier New', Courier, monospace;
-  overflow: scroll;
+  overflow-x: hidden;
+  overflow-y: scroll;
   word-wrap: break-word;
-  z-index: -1;
 }
 
 .container:not(.bar), .container:not(.bar) > * {
