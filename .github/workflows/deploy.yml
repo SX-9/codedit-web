@@ -3,7 +3,7 @@ name: Deploy
 on:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:
 
 jobs:
@@ -27,11 +27,11 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - uses: 1arp/create-a-file-action@0.2
-        with:
-          path: './dist'
-          file: 'CNAME'
-          content: new.sx9.is-a.dev
+#      - uses: 1arp/create-a-file-action@0.2
+#        with:
+#          path: './dist'
+#          file: 'CNAME'
+#          content: new.sx9.is-a.dev
 
       - name: Upload production-ready build files
         uses: actions/upload-artifact@v2
