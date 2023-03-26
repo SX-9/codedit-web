@@ -35,37 +35,33 @@ console.log('hi');
 
   const jsFile = await container.fs.readFile('index.js', 'utf-8');
   code.value = jsFile;
+  await container.spawn('npm', ['i', '--save-dev', 'nodemon']);
   document.getElementById('term').innerHTML = 'WebContainer Booted, Terminal Output Here';
 
   container.on('server-ready', (port, url) => {
     alert('Server Opened Port ' + port);
+    window.open(url);
     webapp.value = url;
   });
+  container.on('error', (e) => document.getElementById('term').innerText =
+  'Error:\n\n' + e);
 });
 
-async function getInput(msg) {
+function getInput(msg) {
   return new Promise((resolve) => {
     const input = window.prompt(msg);
     resolve(input);
   });
 }
-async function install(...deps) {
-  if (!deps) deps = await getInput('Enter Dependencies To Install:').split(' ');
-  let installProcess = await container.spawn('pnpm', ['install', ...deps]);
-  installProcess.output.pipeTo(new WritableStream({
-    write(data) {
-      console.log(data);
-    }
-  }));
-  return installProcess.exit;
-}
-async function startServer() {
-  let server = await container.spawn('node', ['index.js']);
 
-  document.getElementById('term').innerHTML = '';
+async function startServer() {
+  let server = await container.spawn('nodemon', ['index.js']);
+
+  document.getElementById('term').innerHTML = 'Starting Dev Server...<br><br>';
   server.output.pipeTo(new WritableStream({
     write(data) {
-      document.getElementById('term').innerHTML += data;
+      document.getElementById('term').innerHTML +=
+      data.replace(/\[(\d?;?\d*)m/g, data) + '<br>';
     }
   }));
 }
@@ -76,10 +72,10 @@ async function exec() {
   let cmd = prompt('Enter Command To Execute:').split(' ');
   let server = await container.spawn(cmd[0], cmd.slice(1));
 
-  document.getElementById('term').innerHTML = '';
+  document.getElementById('term').innerHTML = 'Running Command...<br><br>';
   server.output.pipeTo(new WritableStream({
     write(data) {
-      document.getElementById('term').innerHTML += data;
+      document.getElementById('term').innerText += data;
     }
   }));
 }
@@ -88,7 +84,7 @@ async function exec() {
 <template>
   <div id="workspace">
     <div class="container bar">
-      <p><a @click="startServer">Run Dev Server</a> | <a @click="install">Install Deps</a> | <a @click="exec">Run Command</a></p>
+      <p><a @click="startServer">Run Dev Server</a> | <a @click="exec">Run Command</a></p>
     </div>
     <Codemirror
       class="container"
@@ -103,26 +99,28 @@ async function exec() {
     <div class="container"><div id="term">
       Booting WebContainer...
     </div></div>
-    <div class="container">
-      <iframe id="preview" :src="webapp" frameborder="0"></iframe>
-    </div>
   </div>
 </template>
 
 <style>
 #workspace {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
   width: 100%;
   height: 100%;
   display: grid;
   grid-gap: .01em;
-  grid-template-columns: 30% 40% 30%;
+  grid-template-columns: 50% 50%;
   grid-template-rows: 1.5rem 1fr;
   grid-template-areas:
-    'bar bar bar'
-    'edit term prev';
+    'bar bar'
+    'edit term';
 }
 
 #term {
+  margin: 0;
+  padding: 0;
   font-family: 'Courier New', Courier, monospace;
   overflow: scroll;
   word-wrap: break-word;
@@ -138,10 +136,10 @@ async function exec() {
 
 .container.bar {
   grid-area: bar;
-  width: 100%;
-  background-color: #585858;
+  background-color: black;
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 .container.bar > * {
   padding: 0;
@@ -150,13 +148,12 @@ async function exec() {
 
 @media (max-width: 600px) {
   #workspace {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1.5rem repeat(3, 1fr);
+    grid-template-columns: 100%;
+    grid-template-rows: 4% 40% 56%;
     grid-template-areas: 
       "bar"
       "edit"
-      "term"
-      "prev";
+      "term";
   }
 }
 </style>
