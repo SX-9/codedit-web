@@ -26,9 +26,9 @@ console.log('hi');
     'express-example.js': {
       file: {
         contents: `\
-const app=require('express');
-app.get('/',(req,res)=>res.send('hi'));
-app.listen(3000,()=>console.log('hi'));
+const app = require('express');
+app.get('/', (req, res) => res.send('hi'));
+app.listen(3000, () => console.log('hi'));
         `
       }
     },
