@@ -13,7 +13,9 @@
     "@codemirror/theme-one-dark": "^6.1.1",
     "@webcontainer/api": "^1.1.0",
     "vue": "^3.2.45",
-    "vue-codemirror": "^6.1.1"
+    "vue-codemirror": "^6.1.1",
+    "xterm": "^5.1.0",
+    "xterm-addon-fit": "^0.7.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.0.0",

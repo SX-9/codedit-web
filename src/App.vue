@@ -4,6 +4,8 @@ import { Codemirror } from "vue-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { WebContainer } from '@webcontainer/api';
+import { Terminal } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
 console.clear();
 const extensions = [javascript(), oneDark];
 const webapp = ref("loading.html");
@@ -21,6 +23,15 @@ console.log('hi');
         `
       }
     },
+    'express-example.js': {
+      file: {
+        contents: `\
+const app=require('express');
+app.get('/',(req,res)=>res.send('hi'));
+app.listen(3000,()=>console.log('hi'));
+        `
+      }
+    },
     'package.json': {
       file: {
         contents: `\
@@ -33,58 +44,63 @@ console.log('hi');
     }
   });
 
+  const fitAddon = new FitAddon();
+  const terminal = new Terminal({
+    convertEol: true,
+  });
+  terminal.loadAddon(fitAddon);
+  terminal.open(document.getElementById('term'));
+  fitAddon.fit();
+
   const jsFile = await container.fs.readFile('index.js', 'utf-8');
   code.value = jsFile;
-  await container.spawn('npm', ['i', '--save-dev', 'nodemon']);
-  document.getElementById('term').innerHTML = 'WebContainer Booted, Terminal Output Here';
 
+  const shellProcess = await shell(terminal);
+  window.addEventListener('resize', () => {
+    fitAddon.fit();
+    shellProcess.resize({
+      cols: terminal.cols,
+      rows: terminal.rows,
+    });
+  });
   container.on('server-ready', (port, url) => {
     alert('Server Opened Port ' + port);
     window.open(url);
     webapp.value = url;
   });
-  container.on('error', (e) => document.getElementById('term').innerText =
-  'Error:\n\n' + e);
+  container.on('error', console.error);
 });
 
-function getInput(msg) {
-  return new Promise((resolve) => {
-    const input = window.prompt(msg);
-    resolve(input);
-  });
-}
-
-async function startServer() {
-  let server = await container.spawn('node', ['index.js']);
-
-  document.getElementById('term').innerHTML = 'Starting Dev Server...<br><br>';
-  server.output.pipeTo(new WritableStream({
-    write(data) {
-      document.getElementById('term').innerHTML +=
-      data.replace(/\[(?\d*?;?\d*)m/g, '') + '<br>';
-    }
-  }));
-}
 async function save(e) {
   await container.fs.writeFile('index.js', e);
 }
-async function exec() {
-  let cmd = prompt('Enter Command To Execute:').split(' ');
-  let server = await container.spawn(cmd[0], cmd.slice(1));
+async function shell(t) {
+  let shellP = await container.spawn('jsh', {
+    terminal: {
+      cols: t.cols,
+      rows: t.rows,
+    },
+  });
 
-  document.getElementById('term').innerHTML = 'Running Command...<br><br>';
-  server.output.pipeTo(new WritableStream({
+  shellP.output.pipeTo(new WritableStream({
     write(data) {
-      document.getElementById('term').innerText += data;
+      t.write(data);
     }
   }));
+
+  const input = shellP.input.getWriter();
+  t.onData((data) => {
+    input.write(data);
+  });
+
+  return shellP;
 }
 </script>
 
 <template>
   <div id="workspace">
     <div class="container bar">
-      <p><a @click="startServer">Run Dev Server</a> | <a @click="exec">Run Command</a></p>
+      <p>CodedIt WebContainers</p>
     </div>
     <Codemirror
       class="container"
@@ -96,9 +112,7 @@ async function exec() {
       :tab-size="2"
       :extensions="extensions"
     />
-    <div class="container"><div id="term">
-      Booting WebContainer...
-    </div></div>
+    <div class="container"><div id="term"></div></div>
   </div>
 </template>
 
