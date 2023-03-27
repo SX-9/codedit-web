@@ -19,16 +19,17 @@ window.addEventListener('load', async () => {
     'index.js': {
       file: {
         contents: `\
-console.log('hi');
-        `
+// Welcome To CodedIt WebContainers!
+
+console.log('hi codedit webcontainers');`
       }
     },
     'http.js': {
       file: {
         contents: `\
-const app = require('express');
+const app = require('express')();
 app.get('/', (req, res) => res.send('hi'));
-app.listen(3000, () => console.log('hi'));
+app.listen(3000, () => console.log('Example Server Running...'));
         `
       }
     },
@@ -64,11 +65,13 @@ app.listen(3000, () => console.log('hi'));
     });
   });
   container.on('server-ready', (port, url) => {
-    alert('Server Opened Port ' + port);
+    alert('Server Opened Port ' + port + ', Opening In New Tab...');
     window.open(url);
     webapp.value = url;
   });
   container.on('error', console.error);
+
+  document.querySelector('#loading').remove();
 });
 
 async function save(e) {
@@ -82,6 +85,10 @@ async function shell(t) {
     },
   });
 
+  t.write(`Try Running: "node index.js"
+Or Run The Express Server: "http.js"
+  
+`);
   shellP.output.pipeTo(new WritableStream({
     write(data) {
       t.write(data);
@@ -114,9 +121,34 @@ async function shell(t) {
     />
     <div class="container"><div id="term"></div></div>
   </div>
+  <div id="loading">
+    <noscript>ERROR: CANT RUN JAVASCRIPT<br>PLEASE TRY ANOTHER BROWSER</noscript>
+    <h2>Booting WebContainer...</h2>
+    <p>Get Stuck? Try Refreshing!</p>
+  </div>
 </template>
 
 <style>
+#loading {
+  cursor: loading;
+  background: #000000e0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+#loading > * {
+  margin: 0;
+}
+#loading > h2 {
+  animation: blink 750ms infinite;
+}
+
 #workspace {
   overflow: hidden;
   margin: 0;
@@ -124,7 +156,7 @@ async function shell(t) {
   width: 100%;
   height: 100%;
   display: grid;
-  grid-gap: .01em;
+  grid-gap: .05em;
   grid-template-columns: 50% 50%;
   grid-template-rows: 4% 96%;
   grid-template-areas:
@@ -136,8 +168,7 @@ async function shell(t) {
   margin: 0;
   padding: 0;
   font-family: 'Courier New', Courier, monospace;
-  overflow-x: hidden;
-  overflow-y: scroll;
+  overflow: hidden;
   word-wrap: break-word;
 }
 
@@ -159,6 +190,10 @@ async function shell(t) {
   margin: 0;
 }
 
+noscript {
+  color: red;
+}
+
 @media (max-width: 600px) {
   #workspace {
     grid-template-columns: 100%;
@@ -167,6 +202,15 @@ async function shell(t) {
       "bar"
       "edit"
       "term";
+  }
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
   }
 }
 </style>
