@@ -23,7 +23,7 @@ console.log('hi');
         `
       }
     },
-    'express-example.js': {
+    'http.js': {
       file: {
         contents: `\
 const app = require('express');
