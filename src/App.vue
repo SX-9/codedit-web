@@ -6,6 +6,7 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { WebContainer } from '@webcontainer/api';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
+import { common } from 'xterm-style';
 console.clear();
 const extensions = [javascript(), oneDark];
 const webapp = ref("loading.html");
@@ -54,6 +55,7 @@ app.listen(3000, () => console.log('Example Server Running...'));
   const fitAddon = new FitAddon();
   const terminal = new Terminal({
     convertEol: true,
+    theme: common,
   });
   terminal.loadAddon(fitAddon);
   terminal.open(document.getElementById('term'));
