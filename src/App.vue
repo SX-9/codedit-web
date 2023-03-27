@@ -38,7 +38,13 @@ app.listen(3000, () => console.log('Example Server Running...'));
         contents: `\
 {
   "name": "codedit",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
 }
         `
       }
@@ -70,6 +76,13 @@ app.listen(3000, () => console.log('Example Server Running...'));
     webapp.value = url;
   });
   container.on('error', console.error);
+  
+  const i = await container.spawn('npm', ['i']);
+  i.output.pipeTo(new WritableStream({
+    write(data) {
+      console.log(data);
+    }
+  }));
 
   document.querySelector('#loading').remove();
 });
