@@ -10,7 +10,9 @@ import { common } from 'xterm-style';
 console.clear();
 const extensions = [javascript(), oneDark];
 const webapp = ref("loading.html");
+const port = ref(0);
 const code = ref('');
+const w = ref(window);
 
 let container;
 
@@ -22,7 +24,7 @@ window.addEventListener('load', async () => {
         contents: `\
 // Welcome To CodedIt WebContainers!
 
-console.log('hi codedit webcontainers');`
+console.log('hi nodejs ' + process.version);`
       }
     },
     'http.js': {
@@ -30,7 +32,7 @@ console.log('hi codedit webcontainers');`
         contents: `\
 const app = require('express')();
 app.get('/', (req, res) => res.send('hi'));
-app.listen(3000, () => console.log('Example Server Running...'));
+app.listen(3000, () => console.log('example server running...'));
         `
       }
     },
@@ -72,8 +74,9 @@ app.listen(3000, () => console.log('Example Server Running...'));
       rows: terminal.rows,
     });
   });
-  container.on('server-ready', (port, url) => {
-    alert('Server Opened Port ' + port + ', Opening In New Tab...');
+  container.on('server-ready', (portH, url) => {
+    alert('Server Opened Port ' + portH + ', Opening In New Tab...');
+    port.value = portH;
     window.open(url);
     webapp.value = url;
   });
@@ -94,14 +97,17 @@ async function save(e) {
 }
 async function shell(t) {
   let shellP = await container.spawn('jsh', {
+    env: {
+      SHELL: 'bash',
+      TERM_PROGRAM: 'codedit-term',
+    },
     terminal: {
       cols: t.cols,
       rows: t.rows,
     },
   });
 
-  t.write(`Try Running: "node index.js"
-Or Run The Express Server: "http.js"
+  t.write(`Try Typing "node index.js"
   
 `);
   shellP.output.pipeTo(new WritableStream({
@@ -122,12 +128,13 @@ Or Run The Express Server: "http.js"
 <template>
   <div id="workspace">
     <div class="container bar">
-      <p>CodedIt WebContainers</p>
+    <a href="https://github.com/SX-9/codedit-web">Source Code</a>
+    <a v-if="port" @click="w.open(webapp)" >Open Port {{ port }}</a>
     </div>
     <Codemirror
       class="container"
       v-model="code"
-      placeholder="console.log('hi');"
+      placeholder="Code Here..."
       @change="save($event)"
       :autofocus="true"
       :indent-with-tab="true"
@@ -139,14 +146,17 @@ Or Run The Express Server: "http.js"
   <div id="loading">
     <noscript>ERROR: CANT RUN JAVASCRIPT<br>PLEASE TRY ANOTHER BROWSER</noscript>
     <h2>Booting WebContainer...</h2>
-    <p>Get Stuck? Try Refreshing!</p>
+    <p>Get Stuck? Try Refreshing!
+      <br><a href="https://webcontainers.io/guides/troubleshooting">Troubleshoot</a> 
+      - <a href="https://sx9.is-a.dev">Made By Me</a>
+    </p>
   </div>
 </template>
 
 <style>
 #loading {
-  cursor: loading;
-  background: #000000e0;
+  cursor: progress;
+  background: #000000b9;
   position: fixed;
   top: 0;
   left: 0;
@@ -156,9 +166,10 @@ Or Run The Express Server: "http.js"
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  text-align: center;
 }
 #loading > * {
-  margin: 0;
+  margin: .3em;
 }
 #loading > h2 {
   animation: blink 750ms infinite;
@@ -199,6 +210,7 @@ Or Run The Express Server: "http.js"
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 2em;
 }
 .container.bar > * {
   padding: 0;
