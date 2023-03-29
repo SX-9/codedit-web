@@ -128,7 +128,7 @@ async function shell(t) {
 <template>
   <div id="workspace">
     <div class="container bar">
-    <a href="https://github.com/SX-9/codedit-web">Source Code</a>
+    <a href="https://github.com/SX-9/codedit-web">Github</a>
     <a v-if="port" @click="w.open(webapp)" >Open Port {{ port }}</a>
     </div>
     <Codemirror
