@@ -1,7 +1,7 @@
 # CodedIt Web
 
 Run NodeJs **ENTIRELY** In The Browser!
-[Live Site](https://codedit-web.vercel.app/)
+[Live Site](https://codedit.is-an.app/)
 
 # How?
 
