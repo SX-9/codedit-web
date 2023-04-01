@@ -3,40 +3,48 @@ import { ref } from "vue";
 import { Codemirror } from "vue-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { WebContainer } from '@webcontainer/api';
-import { Terminal } from 'xterm';
-import { FitAddon } from 'xterm-addon-fit';
-import { common } from 'xterm-style';
+import { WebContainer } from "@webcontainer/api";
+import { Terminal } from "xterm";
+import { FitAddon } from "xterm-addon-fit";
+import { common } from "xterm-style";
+import { VueWinBox } from "vue-winbox";
+
 console.clear();
 const extensions = [javascript(), oneDark];
 const webapp = ref("loading.html");
 const port = ref(0);
-const code = ref('');
+const code = ref("");
 const w = ref(window);
+const x = "center";
+const y = "center";
 
 let container;
 
-window.addEventListener('load', async () => {
+window.addEventListener("load", async () => {
+  document.querySelectorAll(".wb-close").forEach((b) => b.remove());
+  document.querySelectorAll(".wb-full").forEach((b) => b.remove());
+  document.querySelectorAll(".wb-min").forEach((b) => b.click());
+
   container = await WebContainer.boot();
   await container.mount({
-    'index.js': {
+    "index.js": {
       file: {
         contents: `\
 // Welcome To CodedIt WebContainers!
 
-console.log('hi nodejs ' + process.version);`
-      }
+console.log('hi nodejs ' + process.version);`,
+      },
     },
-    'http.js': {
+    "http.js": {
       file: {
         contents: `\
 const app = require('express')();
-app.get('/', (req, res) => res.send('hi'));
+app.get('/', (req, res) => res.send('hi from http.js'));
 app.listen(3000, () => console.log('example server running...'));
-        `
-      }
+        `,
+      },
     },
-    'package.json': {
+    "package.json": {
       file: {
         contents: `\
 {
@@ -49,9 +57,9 @@ app.listen(3000, () => console.log('example server running...'));
     "nodemon": "^2.0.22"
   }
 }
-        `
-      }
-    }
+        `,
+      },
+    },
   });
 
   const fitAddon = new FitAddon();
@@ -60,10 +68,10 @@ app.listen(3000, () => console.log('example server running...'));
     theme: common,
   });
   terminal.loadAddon(fitAddon);
-  terminal.open(document.getElementById('term'));
+  terminal.open(document.getElementById("term"));
   fitAddon.fit();
 
-  const jsFile = await container.fs.readFile('index.js', 'utf-8');
+  const jsFile = await container.fs.readFile("index.js", "utf-8");
   code.value = jsFile;
 
   const shellProcess = await shell(terminal);
@@ -75,34 +83,35 @@ app.listen(3000, () => console.log('example server running...'));
     });
   });
   container.on('server-ready', (portH, url) => {
-    alert('Server Opened Port ' + portH + ', Opening In New Tab...');
+    alert('Server Opened Port ' + portH);
     port.value = portH;
-    window.open(url);
     webapp.value = url;
   });
-  container.on('error', console.error);
-  
-  const i = await container.spawn('npm', ['i']);
-  i.output.pipeTo(new WritableStream({
-    write(data) {
-      console.log(data);
-    }
-  }));
+  container.on("error", console.error);
 
-  document.querySelector('#loading').remove();
+  const i = await container.spawn("npm", ["i"]);
+  i.output.pipeTo(
+    new WritableStream({
+      write(data) {
+        console.log(data);
+      },
+    })
+  );
+
+  document.querySelector("#loading").remove();
 });
 
 async function save(e) {
-  await container.fs.writeFile('index.js', e);
+  await container.fs.writeFile("index.js", e);
 }
 async function shell(t) {
-  let shellP = await container.spawn('jsh', {
+  let shellP = await container.spawn("jsh", {
     env: {
-      SHELL: 'bash',
-      TERM_PROGRAM: 'codedit-term',
+      SHELL: "bash",
+      TERM_PROGRAM: "codedit-term",
     },
     terminal: {
-      cols: t.cols,
+      cols: t.columns,
       rows: t.rows,
     },
   });
@@ -110,11 +119,13 @@ async function shell(t) {
   t.write(`Try Typing "node index.js"
   
 `);
-  shellP.output.pipeTo(new WritableStream({
-    write(data) {
-      t.write(data);
-    }
-  }));
+  shellP.output.pipeTo(
+    new WritableStream({
+      write(data) {
+        t.write(data);
+      },
+    })
+  );
 
   const input = shellP.input.getWriter();
   t.onData((data) => {
@@ -127,27 +138,37 @@ async function shell(t) {
 
 <template>
   <div id="workspace">
-    <div class="container bar">
-    <a href="https://github.com/SX-9/codedit-web">Source Code</a>
-    <a v-if="port" @click="w.open(webapp)" >Open Port {{ port }}</a>
+    <div class="bar">
+      <a href="https://github.com/SX-9/codedit-web">Github</a>
+      <a v-if="port" @click="w.open(webapp)">Open Port {{ port }}</a>
     </div>
-    <Codemirror
-      class="container"
-      v-model="code"
-      placeholder="Code Here..."
-      @change="save($event)"
-      :autofocus="true"
-      :indent-with-tab="true"
-      :tab-size="2"
-      :extensions="extensions"
-    />
-    <div class="container"><div id="term"></div></div>
+    <div id="term"></div>
+    <VueWinBox :options="{ title: 'Code Editor', x, y }">
+      <Codemirror
+        v-model="code"
+        placeholder="Code Here..."
+        @change="save($event)"
+        :autofocus="true"
+        :indent-with-tab="true"
+        :tab-size="2"
+        :extensions="extensions"
+      />
+    </VueWinBox>
+    <VueWinBox :options="{ title: 'Web Browser', x, y }"
+      ><iframe :src="webapp"></iframe
+    ></VueWinBox>
   </div>
   <div id="loading">
-    <noscript>ERROR: CANT RUN JAVASCRIPT<br>PLEASE TRY ANOTHER BROWSER</noscript>
+    <noscript
+      >ERROR: CANT RUN JAVASCRIPT<br />PLEASE TRY ANOTHER BROWSER</noscript
+    >
+    <div id="loading-logo"></div>
     <h2>Booting WebContainer...</h2>
-    <p>Get Stuck? Try Refreshing!
-      <br><a href="https://webcontainers.io/guides/troubleshooting">Troubleshoot</a> 
+    <p>
+      Get Stuck? Try Refreshing! <br /><a
+        href="https://webcontainers.io/guides/troubleshooting"
+        >Troubleshoot</a
+      >
       - <a href="https://sx9.is-a.dev">Made By Me</a>
     </p>
   </div>
@@ -162,14 +183,15 @@ async function shell(t) {
   left: 0;
   width: 100vw;
   height: 100vh;
+  text-align: center;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
-  text-align: center;
+  z-index: 100;
 }
 #loading > * {
-  margin: .3em;
+  margin: 0.3em;
 }
 #loading > h2 {
   animation: blink 750ms infinite;
@@ -179,61 +201,86 @@ async function shell(t) {
   overflow: hidden;
   margin: 0;
   padding: 0;
-  width: 100%;
-  height: 100%;
-  display: grid;
-  grid-gap: .05em;
-  grid-template-columns: 50% 50%;
-  grid-template-rows: 4% 96%;
-  grid-template-areas:
-    'bar bar'
-    'edit term';
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 #term {
+  height: 100%;
   margin: 0;
   padding: 0;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
   overflow: hidden;
   word-wrap: break-word;
-}
-
-.container:not(.bar), .container:not(.bar) > * {
-  height: 100%;
   width: 100%;
-  max-width: 100%;
-  max-height: 100%;
 }
 
-.container.bar {
-  grid-area: bar;
+#loading-logo {
+  width: 3em;
+  height: 3em;
+  border-radius: 50%;
+  border: 0.3em solid white;
+  border-top: 0.3em solid black;
+  animation: spin 1s infinite;
+}
+
+.bar {
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 2em;
+  background: #272727;
 }
-.container.bar > * {
+.bar > * {
   padding: 0;
   margin: 0;
+}
+
+.winbox,
+.wb-body {
+  border-radius: 0.5em;
+}
+.winbox {
+  background-color: #384a6db9;
+}
+.wb-body {
+  margin: 0.5em;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: black;
+}
+.wb-body .cm-editor {
+  position: relative;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
 }
 
 noscript {
   color: red;
 }
 
-@media (max-width: 600px) {
-  #workspace {
-    grid-template-columns: 100%;
-    grid-template-rows: 4% 40% 56%;
-    grid-template-areas: 
-      "bar"
-      "edit"
-      "term";
+@keyframes spin {
+  0%,
+  100% {
+    transform: rotate(360deg);
+  }
+  50% {
+    transform: rotate(0deg);
   }
 }
 
 @keyframes blink {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
