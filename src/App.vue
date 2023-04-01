@@ -15,8 +15,6 @@ const webapp = ref("loading.html");
 const port = ref(0);
 const code = ref("");
 const w = ref(window);
-const x = "center";
-const y = "center";
 
 let container;
 
@@ -143,7 +141,7 @@ async function shell(t) {
       <a v-if="port" @click="w.open(webapp)">Open Port {{ port }}</a>
     </div>
     <div id="term"></div>
-    <VueWinBox :options="{ title: 'Code Editor', x, y }">
+    <VueWinBox :options="{ title: 'Code Editor', y: 'bottom', x: 'right' }">
       <Codemirror
         v-model="code"
         placeholder="Code Here..."
@@ -154,7 +152,7 @@ async function shell(t) {
         :extensions="extensions"
       />
     </VueWinBox>
-    <VueWinBox :options="{ title: 'Web Browser', x, y }"
+    <VueWinBox :options="{ title: 'Web Browser', y: 'bottom', x: 'left' }"
       ><iframe :src="webapp"></iframe
     ></VueWinBox>
   </div>
@@ -225,7 +223,8 @@ async function shell(t) {
   border-radius: 50%;
   border: 0.3em solid white;
   border-top: 0.3em solid black;
-  animation: spin 1s infinite;
+  border-bottom: 0.3em solid black;
+  animation: spin 500ms infinite;
 }
 
 .bar {
@@ -269,11 +268,10 @@ noscript {
 }
 
 @keyframes spin {
-  0%,
-  100% {
+  from {
     transform: rotate(360deg);
   }
-  50% {
+  to {
     transform: rotate(0deg);
   }
 }
