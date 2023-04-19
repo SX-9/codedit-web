@@ -114,8 +114,13 @@ async function shell(t) {
     },
   });
 
-  t.write(`Try Typing "node index.js"
-  
+  t.write(`Try Typing "node index.js"\x1b[1;36m
+  ____          _          _ ___ _   
+ / ___|___   __| | ___  __| |_ _| |_ 
+| |   / _ \\ / _\` |/ _ \\/ _\` || || __|
+| |__| (_) | (_| |  __/ (_| || || |_ 
+ \\____\\___/ \\__,_|\\___|\\__,_|___|\\__|
+\x1b[0m
 `);
   shellP.output.pipeTo(
     new WritableStream({
