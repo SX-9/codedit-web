@@ -10,6 +10,7 @@ import { common } from "xterm-style";
 import { VueWinBox } from "vue-winbox";
 
 console.clear();
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const extensions = [javascript(), oneDark];
 const webapp = ref("loading.html");
 const port = ref(0);
@@ -24,6 +25,8 @@ window.addEventListener("load", async () => {
   document.querySelectorAll(".wb-min").forEach((b) => b.click());
 
   container = await WebContainer.boot();
+
+  document.querySelector("#logs").innerText += 'Mounting File System...\n';
   await container.mount({
     "index.js": {
       file: {
@@ -38,7 +41,7 @@ console.log('hi nodejs ' + process.version);`,
         contents: `\
 const app = require('express')();
 app.get('/', (req, res) => res.send('hi from http.js'));
-app.listen(3000, () => console.log('example server running...'));
+app.listen(3000, () => console.log('example server running...\n'));
         `,
       },
     },
@@ -59,7 +62,12 @@ app.listen(3000, () => console.log('example server running...'));
       },
     },
   });
+  
+  document.querySelector("#logs").innerText += 'Opening Editor...\n';
+  const jsFile = await container.fs.readFile("index.js", "utf-8");
+  code.value = jsFile;
 
+  document.querySelector("#logs").innerText += 'Opening Terminal...\n';
   const fitAddon = new FitAddon();
   const terminal = new Terminal({
     convertEol: true,
@@ -69,24 +77,26 @@ app.listen(3000, () => console.log('example server running...'));
   terminal.open(document.getElementById("term"));
   fitAddon.fit();
 
-  const jsFile = await container.fs.readFile("index.js", "utf-8");
-  code.value = jsFile;
-
+  document.querySelector("#logs").innerText += 'Spawning Shell...\n';
   const shellProcess = await shell(terminal);
-  window.addEventListener('resize', () => {
+  window.addEventListener("resize", () => {
     fitAddon.fit();
     shellProcess.resize({
       cols: terminal.cols,
       rows: terminal.rows,
     });
   });
-  container.on('server-ready', (portH, url) => {
-    alert('Server Opened Port ' + portH);
+  container.on("server-ready", (portH, url) => {
+    alert("Server Opened Port " + portH);
     port.value = portH;
     webapp.value = url;
   });
-  container.on("error", console.error);
+  container.on(
+    "error",
+    (error) => (document.querySelector("#logs").innerText += error + "\n")
+  );
 
+  document.querySelector("#logs").innerText += 'Installing Dependencies...\n';
   const i = await container.spawn("npm", ["i"]);
   i.output.pipeTo(
     new WritableStream({
@@ -96,6 +106,8 @@ app.listen(3000, () => console.log('example server running...'));
     })
   );
 
+  document.querySelector("#logs").innerText += 'Finishing Up...\n';
+  await sleep(1000);
   document.querySelector("#loading").remove();
 });
 
@@ -169,12 +181,16 @@ async function shell(t) {
     <h2>Booting WebContainer...</h2>
     <p>
       Get Stuck? Try Refreshing! <br /><a
-        href="https://webcontainers.io/guides/troubleshooting"
+      href="https://webcontainers.io/guides/troubleshooting"
         >Troubleshoot</a
-      >
-      - <a href="https://sx9.is-a.dev">Made By Me</a>
-    </p>
-  </div>
+        >
+        - <a href="https://sx9.is-a.dev">Made By Me</a>
+      </p>
+      <details>
+        <summary>Boot Logs</summary>
+        <pre id="logs"></pre>
+      </details>
+    </div>
 </template>
 
 <style>
@@ -230,6 +246,16 @@ async function shell(t) {
   border-top: 0.3em solid black;
   border-bottom: 0.3em solid black;
   animation: spin 500ms infinite;
+}
+
+#logs {
+  background: black;
+  text-align: left;
+  overflow-y: scroll;
+  overflow-x: none;
+  width: 100%;
+  height: 50vh;
+  padding: 1em;
 }
 
 .bar {
