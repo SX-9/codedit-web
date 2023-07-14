@@ -14,7 +14,7 @@
     "@webcontainer/api": "^1.1.5",
     "vue": "^3.3.4",
     "vue-codemirror": "^6.1.1",
-    "vue-winbox": "^0.2.1",
+    "vue-winbox": "^0.2.3",
     "xterm": "^5.1.0",
     "xterm-addon-fit": "^0.7.0",
     "xterm-style": "^1.1.0"
