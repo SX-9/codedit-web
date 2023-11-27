@@ -121,7 +121,7 @@ async function shell(t) {
       TERM_PROGRAM: "codedit-term",
     },
     terminal: {
-      cols: t.columns,
+      cols: t.cols,
       rows: t.rows,
     },
   });
