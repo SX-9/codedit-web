@@ -11,7 +11,7 @@
   "dependencies": {
     "@codemirror/lang-javascript": "^6.1.7",
     "@codemirror/theme-one-dark": "^6.1.1",
-    "@webcontainer/api": "^1.1.5",
+    "@webcontainer/api": "^1.1.6",
     "vue": "^3.3.4",
     "vue-codemirror": "^6.1.1",
     "vue-winbox": "^0.2.3",
