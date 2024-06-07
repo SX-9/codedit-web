@@ -41,7 +41,7 @@ console.log('hi nodejs ' + process.version);`,
         contents: `\
 const app = require('express')();
 app.get('/', (req, res) => res.send('hi from http.js'));
-app.listen(3000, () => console.log('example server running...\n'));
+app.listen(3000, () => console.log('example server running...\\n'));
         `,
       },
     },
